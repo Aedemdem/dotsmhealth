@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "882869536449",
+    "firebase_url": "https://tbc-reminder-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "tbc-reminder",
+    "storage_bucket": "tbc-reminder.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882869536449:android:43918d28fdeae84cc7f640",
+        "android_client_info": {
+          "package_name": "com.damsdev.tbc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "882869536449-gjh8cq9mri274oq66vfeh3b7k6tl18o6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.damsdev.tbc",
+            "certificate_hash": "b2ca7319b81175447ec9d4491899ffe60bfa0fec"
+          }
+        },
+        {
+          "client_id": "882869536449-dkfae7c6fs7gdl26npl4gugbqod4f3g8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ2LNadfWuOQ3JjPQn_Ef896X_n-BpCaQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "882869536449-dkfae7c6fs7gdl26npl4gugbqod4f3g8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

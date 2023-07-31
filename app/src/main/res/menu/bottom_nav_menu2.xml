@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright © 2019, STIKES Muhammadiyah Ciamis
+  ~ Program Sistem Informasi Akdemik (SIAKAD)
+  ~ By IT MUCIS
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_diskusi"
+        android:icon="@drawable/ic_round_home_24"
+        android:title="Beranda" />
+
+    <item
+        android:id="@+id/navigation_materi"
+        android:icon="@drawable/ic_round_people_24"
+        android:title="Permintaan" />
+
+    <item
+        android:id="@+id/navigation_tugas"
+        android:icon="@drawable/ic_round_person_24"
+        android:title="Profil" />
+
+<!--    <item-->
+<!--        android:id="@+id/histori_tugas"-->
+<!--        android:icon="@drawable/ic_description_black_24dp"-->
+<!--        android:title="Histori" />-->
+
+
+</menu>

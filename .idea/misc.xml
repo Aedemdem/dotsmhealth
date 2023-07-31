@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="app/src/main/res/drawable/bg_primary_button.xml" value="0.1645" />
+        <entry key="app/src/main/res/drawable/bg_round_dialog.xml" value="0.147" />
+        <entry key="app/src/main/res/drawable/bg_round_item.xml" value="0.2815" />
+        <entry key="app/src/main/res/drawable/bg_white_button.xml" value="0.1695" />
+        <entry key="app/src/main/res/drawable/bg_white_stroke_button.xml" value="0.1695" />
+        <entry key="app/src/main/res/drawable/ic_round_check_circle_24.xml" value="0.1435" />
+        <entry key="app/src/main/res/layout/activity_aktivitas_pasien.xml" value="0.28453165690104165" />
+        <entry key="app/src/main/res/layout/activity_alarm.xml" value="0.28946533203125" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.28105224021241804" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.3098958333333333" />
+        <entry key="app/src/main/res/layout/activity_pengingat.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/activity_profil.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/activity_reequest.xml" value="0.3477147420247396" />
+        <entry key="app/src/main/res/layout/activity_register.xml" value="0.2440327962239584" />
+        <entry key="app/src/main/res/layout/activity_splash_screen.xml" value="0.25765838623046877" />
+        <entry key="app/src/main/res/layout/activity_tambah_program.xml" value="0.23489583333333333" />
+        <entry key="app/src/main/res/layout/content_main.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/dialog_confirm.xml" value="0.13425925925925927" />
+        <entry key="app/src/main/res/layout/dialog_date_picker.xml" value="0.37604166666666666" />
+        <entry key="app/src/main/res/layout/dialog_list_program_aktivitas.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/dialog_list_program_aktivitas2.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/dialog_nakes.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/dialog_request.xml" value="0.37604166666666666" />
+        <entry key="app/src/main/res/layout/dialog_simpan_detail_aktivitas.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/dialog_tambah_program_aktivitas.xml" value="0.16979166666666667" />
+        <entry key="app/src/main/res/layout/dialog_time_picker.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/fragment_blank.xml" value="0.14270833333333333" />
+        <entry key="app/src/main/res/layout/fragment_home.xml" value="0.23333333333333334" />
+        <entry key="app/src/main/res/layout/fragment_home_pasien.xml" value="0.32449493408203123" />
+        <entry key="app/src/main/res/layout/fragment_pengingat.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/fragment_permintaan.xml" value="0.3527949015299479" />
+        <entry key="app/src/main/res/layout/fragment_profil.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/fragment_profil_pasien.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/item_aktivitas.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/item_detail_aktivitas.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/item_nakes.xml" value="0.5069341023763021" />
+        <entry key="app/src/main/res/layout/item_pasien.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/item_request.xml" value="0.37604166666666666" />
+        <entry key="app/src/main/res/menu/bottom_nav_menu.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/menu/bottom_nav_menu2.xml" value="0.24895833333333334" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
