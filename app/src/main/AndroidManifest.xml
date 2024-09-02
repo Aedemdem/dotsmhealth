@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.damsdev.tbc">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <uses-permission android:name="android.permission.SET_ALARM" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
@@ -19,6 +18,7 @@
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -26,22 +26,31 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TBCReminder">
         <activity
+            android:name=".LoginEmail"
+            android:exported="false"
+            android:parentActivityName=".LoginActivity"/>
+        <activity
             android:name=".TambahProgramActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".nakes.AktivitasPasienActivity"/>
         <activity
             android:name=".nakes.AktivitasPasienActivity"
-            android:parentActivityName=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
         <activity
             android:name=".ProfilActivity"
             android:exported="false" />
+        <activity
+            android:name=".EditProfilActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"/>
         <activity
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
             android:name=".RequestActivity"
-            android:parentActivityName=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
         <activity
             android:name=".RegisterActivity"
             android:exported="false" />
@@ -77,6 +86,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="com.damsdev.tbc.ALARM_TRIGGER" />
             </intent-filter>
         </receiver>
         <receiver

@@ -16,6 +16,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +42,7 @@ import java.util.Objects;
 public class PengingatFragment extends Fragment {
     private static final String CHANNEL_ID = "Alarm_Channel";
     private static final int NOTIFICATION_ID = 1;
+    private static final int REQ_CODE_ALARM = 0;
     Intent alarmIntent;
     PendingIntent pendingIntent;
     Context context;
@@ -64,7 +66,7 @@ public class PengingatFragment extends Fragment {
 
         alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmIntent = new Intent(context, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(context, 0, alarmIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntent = PendingIntent.getBroadcast(context, REQ_CODE_ALARM, alarmIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
 
         createNotificationChannel();
         activateOnBooting();
@@ -140,7 +142,6 @@ public class PengingatFragment extends Fragment {
         calendar.setTimeInMillis(System.currentTimeMillis());
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, 0);
 
         alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
                 AlarmManager.INTERVAL_DAY, pendingIntent);
@@ -153,6 +154,8 @@ public class PengingatFragment extends Fragment {
         cekStatusAlarm();
 
         Toast.makeText(context, "Alarm daitur pada " + hour + ":" + minute, Toast.LENGTH_LONG).show();
+
+        Log.d("GARIS_WAKTU", "");
 
     }
 

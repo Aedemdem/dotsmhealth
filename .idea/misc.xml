@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
@@ -31,7 +30,7 @@
         <entry key="app/src/main/res/layout/dialog_time_picker.xml" value="0.24895833333333334" />
         <entry key="app/src/main/res/layout/fragment_blank.xml" value="0.14270833333333333" />
         <entry key="app/src/main/res/layout/fragment_home.xml" value="0.23333333333333334" />
-        <entry key="app/src/main/res/layout/fragment_home_pasien.xml" value="0.32449493408203123" />
+        <entry key="app/src/main/res/layout/fragment_home_pasien.xml" value="0.2429885864257812" />
         <entry key="app/src/main/res/layout/fragment_pengingat.xml" value="0.24895833333333334" />
         <entry key="app/src/main/res/layout/fragment_permintaan.xml" value="0.3527949015299479" />
         <entry key="app/src/main/res/layout/fragment_profil.xml" value="0.24895833333333334" />
@@ -46,7 +45,7 @@
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

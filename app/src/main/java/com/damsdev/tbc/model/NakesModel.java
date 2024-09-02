@@ -26,7 +26,7 @@ public class NakesModel implements Parcelable {
     private Long createdAt;
     private String idNakes;
     private String nama;
-    private String kealmin;
+    private String kelamin;
     private String tglLahir;
     private String alamat;
     private String email;
@@ -38,7 +38,7 @@ public class NakesModel implements Parcelable {
     public NakesModel(String idNakes, String nama, String kelamin, String tglLahir, String alamat, String email, String noHp) {
         this.idNakes = idNakes;
         this.nama = nama;
-        this.kealmin = kelamin;
+        this.kelamin = kelamin;
         this.tglLahir = tglLahir;
         this.alamat = alamat;
         this.email = email;
@@ -48,7 +48,7 @@ public class NakesModel implements Parcelable {
     public NakesModel(Parcel in) {
         idNakes = in.readString();
         nama = in.readString();
-        kealmin = in.readString();
+        kelamin = in.readString();
         tglLahir = in.readString();
         alamat = in.readString();
         email = in.readString();
@@ -64,7 +64,7 @@ public class NakesModel implements Parcelable {
     public void writeToParcel(@NonNull Parcel parcel, int i) {
         parcel.writeString(idNakes);
         parcel.writeString(nama);
-        parcel.writeString(kealmin);
+        parcel.writeString(kelamin);
         parcel.writeString(tglLahir);
         parcel.writeString(alamat);
         parcel.writeString(email);
@@ -100,12 +100,12 @@ public class NakesModel implements Parcelable {
         this.nama = nama;
     }
 
-    public String getKealmin() {
-        return kealmin;
+    public String getKelamin() {
+        return kelamin;
     }
 
-    public void setKealmin(String kealmin) {
-        this.kealmin = kealmin;
+    public void setKelamin(String kelamin) {
+        this.kelamin = kelamin;
     }
 
     public String getTglLahir() {

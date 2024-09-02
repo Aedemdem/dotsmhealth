@@ -5,6 +5,8 @@ import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -18,6 +20,7 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.damsdev.tbc.EditProfilActivity;
 import com.damsdev.tbc.LoginActivity;
 import com.damsdev.tbc.R;
 import com.damsdev.tbc.RequestActivity;
@@ -55,6 +58,8 @@ public class ProfilPasienFragment extends Fragment {
     private FirebaseUser firebaseUser;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference dbRefPasien, dbRefNakes;
+    String key = "";
+    PasienModel model;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,6 +94,14 @@ public class ProfilPasienFragment extends Fragment {
         binding.linearPendamping.setVisibility(View.GONE);
         binding.cardNakes.setVisibility(View.GONE);
 
+        binding.tvEdit.setOnClickListener(view -> {
+            Intent intent = new Intent(requireActivity(), EditProfilActivity.class);
+            intent.putExtra("sebagai", "pasien");
+            intent.putExtra("key", key);
+            intent.putExtra("model", model);
+            startActivity(intent);
+        });
+
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         Glide.with(requireActivity())
                 .asBitmap()
@@ -107,9 +120,9 @@ public class ProfilPasienFragment extends Fragment {
         dbRefPasien = firebaseDatabase.getReference(DbReference.PASIEN);
         dbRefNakes = firebaseDatabase.getReference(DbReference.NAKES);
 
-        // TODO: 27/07/23 ganti nakaes jadi nakes
-
         getPasein(dbRefPasien.orderByChild("idPasien").equalTo(firebaseUser.getUid()));
+
+        getVersionName();
 
         return binding.getRoot();
     }
@@ -122,12 +135,23 @@ public class ProfilPasienFragment extends Fragment {
                     Log.d(LOG, "Queryyy value: " + snapshot.getValue());
                 } else {
                     for (DataSnapshot data : snapshot.getChildren()) {
-                        PasienModel model = data.getValue(PasienModel.class);
+                        key = data.getKey();
+                        model = data.getValue(PasienModel.class);
                         binding.tvNama.setText(model != null ? model.getNama() : "-");
                         binding.tvTglLahir.setText(model != null ? model.getTglLahir() : "-");
                         binding.tvAlamat.setText(model != null ? model.getAlamat() : "-");
+                        if (model.getKelamin().equals("P")) {
+                            binding.tvJnsKelamin.setText("Perempuan");
+                        } else if (model.getKelamin().equals("L")) {
+                            binding.tvJnsKelamin.setText("Laki-laki");
+                        }
+
                         binding.tvHp.setText(model != null ? model.getNoHp() : "-");
                         binding.tvEmail.setText(model != null ? model.getEmail() : "-");
+                        binding.tvPendidikan.setText(model != null ? model.getPendidikan() : "-");
+                        binding.tvPekerjaan.setText(model != null ? model.getPekerjaan() : "-");
+                        binding.tvMulaiPengobatan.setText(model != null ? model.getMulaiPengobatan() : "-");
+
                         getNakes(dbRefNakes.orderByChild("idNakes").equalTo(model != null ? model.getIdNakes() : ""));
                     }
 
@@ -152,6 +176,8 @@ public class ProfilPasienFragment extends Fragment {
                     Log.d(LOG, "Queryyy value: " + snapshot.getValue());
                     binding.cardNakes.setVisibility(View.GONE);
                     binding.linearPendamping.setVisibility(View.VISIBLE);
+                    Intent intent = new Intent(requireActivity(), RequestActivity.class);
+                    startActivity(intent);
 
                 } else {
 //                    Toast.makeText(RequestActivity.this, "Ditemukan", Toast.LENGTH_SHORT).show();
@@ -210,15 +236,16 @@ public class ProfilPasienFragment extends Fragment {
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
                         // ...
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_NAKES,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_PASIEN,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_IS_ALARM_AKTIF,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_HOUR,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_MINUTS,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI,"");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_NAKES, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_PASIEN, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_IS_ALARM_AKTIF, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_HOUR, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_MINUTS, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI, "");
+
                         sharedPrefManager.clearAll();
                         cancelAlarm();
 
@@ -234,6 +261,21 @@ public class ProfilPasienFragment extends Fragment {
         if (alarmManager != null) {
             alarmManager.cancel(pendingIntent);
         }
+    }
+
+
+    private void getVersionName() {
+        PackageManager pm = requireActivity().getApplicationContext().getPackageManager();
+        String pkgName = requireActivity().getApplicationContext().getPackageName();
+        PackageInfo pkgInfo = null;
+        try {
+            pkgInfo = pm.getPackageInfo(pkgName, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        assert pkgInfo != null;
+        String ver = pkgInfo.versionName;
+        binding.tvVersi.setText("Versi " + ver);
     }
 
 }

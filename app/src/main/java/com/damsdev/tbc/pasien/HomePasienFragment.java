@@ -3,7 +3,6 @@ package com.damsdev.tbc.pasien;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -22,27 +20,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.damsdev.tbc.AktivitasAdapter;
-import com.damsdev.tbc.AktivitasDetailAdapter;
-import com.damsdev.tbc.PengingatActivity;
 import com.damsdev.tbc.R;
-import com.damsdev.tbc.RequestActivity;
 import com.damsdev.tbc.databinding.DialogListProgramAktivitasBinding;
 import com.damsdev.tbc.databinding.DialogSimpanDetailAktivitasBinding;
 import com.damsdev.tbc.databinding.FragmentHomePasienBinding;
+import com.damsdev.tbc.databinding.ItemAktivitasBinding;
 import com.damsdev.tbc.databinding.ItemDetailAktivitasBinding;
 import com.damsdev.tbc.model.AktivitasDetailModel;
 import com.damsdev.tbc.model.AktivitasModel;
 import com.damsdev.tbc.model.PasienModel;
-import com.damsdev.tbc.model.RequestModel;
 import com.damsdev.tbc.util.DbReference;
 import com.damsdev.tbc.util.SharedPrefManager;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -55,29 +50,30 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAktivitasClick, AktivitasDetailAdapter.IAktivitasDetailClick {
+//implements AktivitasDetailAdapter.IAktivitasDetailClick
+public class HomePasienFragment extends Fragment {
     FragmentHomePasienBinding binding;
     String LOG = "LOG_HOME_FRAGMENT";
     Dialog dialogProgram;
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
     private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference dbAktivitas, dbDetailAktivitas, dbPasien;
-    private List<AktivitasModel> aktivitasModels;
-    private List<AktivitasDetailModel> aktivitasDetailModels;
-    private List<String> keyAktivitasList;
-    private List<String> keyDetailAktivitasList;
+    private DatabaseReference dbAktivitas, dbDetailAktivitas, dbPasien, dbNakes;
+    //    private List<AktivitasModel> aktivitasModels;
+//    private List<AktivitasDetailModel> aktivitasDetailModels;
+//    private List<String> keyAktivitasList;
+//    private List<String> keyDetailAktivitasList;
     private String keyAktivitasSelected;
-    private AktivitasAdapter aktivitasAdapter;
+    //    private AktivitasAdapter aktivitasAdapter;
     private SharedPrefManager sharedPrefManager;
     private Calendar calendar;
     private SimpleDateFormat dateFormat;
     private String today;
+    DialogListProgramAktivitasBinding dialogBinding;
 
     public HomePasienFragment() {
         // Required empty public constructor
@@ -94,7 +90,8 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = FragmentHomePasienBinding.inflate(inflater, container, false);
-        binding.cardProgram.setOnClickListener(view -> {
+        dialogBinding = DialogListProgramAktivitasBinding.inflate(getLayoutInflater());
+        binding.fab.setOnClickListener(view -> {
             showProgramDialog();
         });
         binding.addFab.setOnClickListener(view -> {
@@ -121,11 +118,11 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
         today = dateFormat.format(calendar.getTime());
 
         sharedPrefManager = new SharedPrefManager(requireActivity());
-        keyAktivitasList = new ArrayList<>();
-        aktivitasModels = new ArrayList<>();
-        aktivitasDetailModels = new ArrayList<>();
-        keyDetailAktivitasList = new ArrayList<>();
-        aktivitasAdapter = new AktivitasAdapter(aktivitasModels, requireActivity(), this);
+//        keyAktivitasList = new ArrayList<>();
+//        aktivitasModels = new ArrayList<>();
+//        aktivitasDetailModels = new ArrayList<>();
+//        keyDetailAktivitasList = new ArrayList<>();
+//        aktivitasAdapter = new AktivitasAdapter(aktivitasModels, requireActivity(), this);
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(requireActivity());
         binding.rvDetailAktivitas.setLayoutManager(mLayoutManager);
@@ -139,17 +136,27 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
         dbAktivitas = firebaseDatabase.getReference(DbReference.AKTIVITAS);
         dbDetailAktivitas = firebaseDatabase.getReference(DbReference.DETAIL_AKTIVITAS);
         dbPasien = firebaseDatabase.getReference(DbReference.PASIEN);
+        dbNakes = firebaseDatabase.getReference(DbReference.NAKES);
+        binding.addFab.setVisibility(View.VISIBLE);
 
-        if (cekSudahInput()) {
-            binding.addFab.setVisibility(View.GONE);
-        } else {
-            binding.addFab.setVisibility(View.VISIBLE);
-        }
-
+        getNakes();
         getAktivitas(dbAktivitas.orderByChild("idPasien").equalTo(firebaseUser.getUid()));
         getPasein(dbPasien.orderByChild("idPasien").equalTo(firebaseUser.getUid()));
 
         return binding.getRoot();
+    }
+
+    private void getNakes() {
+        dbNakes.orderByChild("idNakes").equalTo(sharedPrefManager.getSpIdNakes()).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                if (!task.isSuccessful()) {
+                    Log.e("firebase", "Error getting data nakes", task.getException());
+                } else {
+                    Log.d("firebase", String.valueOf(task.getResult().getValue()));
+                }
+            }
+        });
     }
 
     private void getPasein(Query query) {
@@ -159,10 +166,10 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
                 if (snapshot.getValue() == null) {
                     Log.d(LOG, "Queryyy value: " + snapshot.getValue());
                 } else {
-                  for (DataSnapshot data: snapshot.getChildren()){
-                      PasienModel model = data.getValue(PasienModel.class);
-                      binding.tvNama.setText(model != null ? model.getNama() : "-");
-                  }
+                    for (DataSnapshot data : snapshot.getChildren()) {
+                        PasienModel model = data.getValue(PasienModel.class);
+                        binding.tvNama.setText(model != null ? model.getNama() : "-");
+                    }
                 }
             }
 
@@ -184,7 +191,7 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
 
     private void getDetailAktivitas() {
         FirebaseRecyclerOptions<AktivitasDetailModel> options = new FirebaseRecyclerOptions.Builder<AktivitasDetailModel>()
-                .setQuery(dbDetailAktivitas.orderByChild("idAktivitas").equalTo(sharedPrefManager.getSpIdAktivitas()), AktivitasDetailModel.class).build(); /** Firebase database eke thiyena data Contact class ekata gannawa*/
+                .setQuery(dbDetailAktivitas.orderByChild("idAktivitas").equalTo(sharedPrefManager.getSpIdAktivitas()), AktivitasDetailModel.class).build();
 
         FirebaseRecyclerAdapter<AktivitasDetailModel, Holder> adapters = new FirebaseRecyclerAdapter<AktivitasDetailModel, Holder>(options) {
             @Override
@@ -213,68 +220,116 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
 
         binding.rvDetailAktivitas.setAdapter(adapters);
         adapters.startListening();
-
     }
 
-    private boolean cekSudahInput() {
-        return sharedPrefManager.getSpTerakhirPost().equals(today);
+    public static class Holder extends RecyclerView.ViewHolder {
+        ItemDetailAktivitasBinding detailAktivitasBinding;
+
+        public Holder(ItemDetailAktivitasBinding detailAktivitasBinding) {
+            super(detailAktivitasBinding.getRoot());
+            this.detailAktivitasBinding = detailAktivitasBinding;
+        }
     }
 
-    private void getAktivitas(Query dbref) {
-        aktivitasModels.clear();
-        keyAktivitasList.clear();
-        aktivitasAdapter.notifyDataSetChanged();
-        // List nakes
-        dbref.addChildEventListener(new ChildEventListener() {
+    private void cekSudahInput() {
+        Query query = dbDetailAktivitas.orderByChild("idAktivitas").equalTo(sharedPrefManager.getSpIdAktivitas());
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Log.d(LOG, "Child Added, " + snapshot.getValue());
-                AktivitasModel model = snapshot.getValue(AktivitasModel.class);
-                aktivitasModels.add(model);
-                aktivitasAdapter.notifyDataSetChanged();
-                keyAktivitasList.add(snapshot.getKey());
-                // TODO: 25/07/23 tampilkan tvProgram, jika takada jangan
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<String> listTgl = new ArrayList<>();
+                if (dataSnapshot.exists()) {
+                    Log.d(LOG, "CEK INPUT : Id Ditemukan");
+                    for (DataSnapshot dst : dataSnapshot.getChildren()) {
+                        Log.d(LOG, "Tgl : " + dst.child("tgl").getValue());
+                        listTgl.add(Objects.requireNonNull(dst.child("tgl").getValue()).toString());
+                    }
+
+                    if (!listTgl.contains(today)) {
+                        Log.d(LOG, "Tgl : !contain today");
+                        postAktivitas();
+                    } else {
+                        Toast.makeText(requireActivity(), "Anda sudah mengisi pada hari ini", Toast.LENGTH_LONG).show();
+                    }
+
+                } else {
+                    // No similar data found, proceed to push
+                    Log.d(LOG, "CEK INPUT : Tidak ada gas input");
+                    Log.d(LOG, "idAktivitas tdk ditemukan");
+                    postAktivitas();
+                }
             }
 
             @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                aktivitasAdapter.notifyDataSetChanged();
-                Log.d(LOG, "onChildChanged, ");
-            }
-
-            @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                aktivitasAdapter.notifyDataSetChanged();
-                Log.d(LOG, "onChildRemoved, ");
-            }
-
-            @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                aktivitasAdapter.notifyDataSetChanged();
-                Log.d(LOG, "onChildMoved, ");
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.d(LOG, "onCancelled, " + error.getMessage());
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                // Handle onCancelled
             }
         });
     }
 
+    private void getAktivitas(Query dbref) {
+//        aktivitasModels.clear();
+//        keyAktivitasList.clear();
+//        aktivitasAdapter.notifyDataSetChanged();
+        // List nakes
+        FirebaseRecyclerOptions<AktivitasModel> options = new FirebaseRecyclerOptions.Builder<AktivitasModel>()
+                .setQuery(dbref, AktivitasModel.class).build();
+        FirebaseRecyclerAdapter<AktivitasModel, HomePasienFragment.HolderAktivitas> adapters = new FirebaseRecyclerAdapter<AktivitasModel, HomePasienFragment.HolderAktivitas>(options) {
+            @SuppressLint("SetTextI18n")
+            @Override
+            protected void onBindViewHolder(@NonNull HomePasienFragment.HolderAktivitas holder, int position, @NonNull AktivitasModel model) {
+                holder.itemAktivitasBinding.tvTgl.setText(model.getTglMulai() + " s/d " + model.getTglSelesai());
+                holder.itemView.setOnClickListener(view -> {
+                    keyAktivitasSelected = getRef(position).getKey();
+                    sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS, keyAktivitasSelected);
+                    dialogProgram.dismiss();
+
+                    sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI, model.getTglMulai());
+                    sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI, model.getTglSelesai());
+
+                    setDashBoard();
+                    getDetailAktivitas();
+                });
+
+//                keyAktivitasList.add(getRef(position).getKey());
+            }
+
+            @Override
+            public void onError(@NonNull DatabaseError error) {
+                super.onError(error);
+                Log.d(LOG, "DatabaseError = " + error.getMessage());
+            }
+
+            @NonNull
+            @Override
+            public HomePasienFragment.HolderAktivitas onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                return new HomePasienFragment.HolderAktivitas(ItemAktivitasBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
+            }
+        };
+
+        dialogBinding.rvProgramAktivitas.setAdapter(adapters);
+        adapters.startListening();
+
+    }
+
+    public static class HolderAktivitas extends RecyclerView.ViewHolder {
+        ItemAktivitasBinding itemAktivitasBinding;
+
+        public HolderAktivitas(ItemAktivitasBinding itemAktivitasBinding) {
+            super(itemAktivitasBinding.getRoot());
+            this.itemAktivitasBinding = itemAktivitasBinding;
+        }
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     private void showProgramDialog() {
-        DialogListProgramAktivitasBinding dialogBinding = DialogListProgramAktivitasBinding.inflate(getLayoutInflater());
+
         dialogProgram.setContentView(dialogBinding.getRoot());
 
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(requireActivity());
         dialogBinding.rvProgramAktivitas.setLayoutManager(mLayoutManager);
         dialogBinding.rvProgramAktivitas.setItemAnimator(new DefaultItemAnimator());
-        dialogBinding.rvProgramAktivitas.setAdapter(aktivitasAdapter);
-        aktivitasAdapter.notifyDataSetChanged();
+//        dialogBinding.rvProgramAktivitas.setAdapter(aktivitasAdapter);
+//        aktivitasAdapter.notifyDataSetChanged();
 
         Objects.requireNonNull(dialogProgram.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialogProgram.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -287,7 +342,7 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
         dialog.setContentView(dialogBinding.getRoot());
         dialogBinding.tvTanggal.setText(today);
         dialogBinding.btnSimpan.setOnClickListener(view -> {
-            postAktivitas();
+            cekSudahInput();
             dialog.dismiss();
         });
 
@@ -297,35 +352,33 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
     }
 
     private void postAktivitas() {
-        if (!cekSudahInput()) {
-            Toast.makeText(requireActivity(), "Menyimpan...", Toast.LENGTH_SHORT).show();
-            AktivitasDetailModel model = new AktivitasDetailModel(sharedPrefManager.getSpIdAktivitas(), "", today, "y");
-            dbDetailAktivitas.push().setValue(model).addOnSuccessListener(requireActivity(), new OnSuccessListener<Void>() {
-                @Override
-                public void onSuccess(Void unused) {
-                    sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST, today);
-                    binding.addFab.setVisibility(View.GONE);
-                }
-            });
-        }
+        Toast.makeText(requireActivity(), "Menyimpan...", Toast.LENGTH_SHORT).show();
+        AktivitasDetailModel model = new AktivitasDetailModel(sharedPrefManager.getSpIdAktivitas(), "", today, "y");
+        dbDetailAktivitas.push().setValue(model).addOnSuccessListener(requireActivity(), new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void unused) {
+                sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST, today);
+//                binding.addFab.setVisibility(View.GONE);
+            }
+        });
     }
 
-    @SuppressLint("SetTextI18n")
-    @Override
-    public void onItemAktivitasClick(int position) {
-        keyAktivitasSelected = keyAktivitasList.get(position);
-        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS, keyAktivitasSelected);
-        dialogProgram.dismiss();
-
-        AktivitasModel model = aktivitasModels.get(position);
-        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI, model.getTglMulai());
-        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI, model.getTglSelesai());
-
-        setDashBoard();
-
-        Log.d(LOG, keyAktivitasList.get(position));
-        getDetailAktivitas();
-    }
+//    @SuppressLint("SetTextI18n")
+//    @Override
+//    public void onItemAktivitasClick(int position) {
+//        keyAktivitasSelected = keyAktivitasList.get(position);
+//        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS, keyAktivitasSelected);
+//        dialogProgram.dismiss();
+//
+//        AktivitasModel model = aktivitasModels.get(position);
+//        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI, model.getTglMulai());
+//        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI, model.getTglSelesai());
+//
+//        setDashBoard();
+//
+//        Log.d(LOG, keyAktivitasList.get(position));
+//        getDetailAktivitas();
+//    }
 
     @SuppressLint("SetTextI18n")
     private void setDashBoard() {
@@ -355,27 +408,13 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
             long diff2 = TimeUnit.DAYS.convert(diffInMillies2, TimeUnit.MILLISECONDS);
 
             binding.tvSisa.setText(diff2 + " hari");
+            // TODO: 08/11/23 on progress
+            binding.addFab.setVisibility(View.VISIBLE);
         } else {
             binding.addFab.setVisibility(View.GONE);
         }
 //        String strKepatuhan = String.valueOf((diff2/diff) * 100);
 //        binding.tvKepatuhan.setText(strKepatuhan+"%");
-    }
-
-    @Override
-    public void onItemDetailAktivitasClick(int position) {
-        AktivitasDetailModel model = aktivitasDetailModels.get(position);
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
-        builder.setMessage("Hapus aktivitas " + model.getTgl() + " ?")
-                .setPositiveButton("Hapus aktivitas", (dialog, id) -> {
-                    hapusAktivitas(keyDetailAktivitasList.get(position));
-                    dialog.cancel();
-                    Toast.makeText(requireActivity(), "Menghapus...", Toast.LENGTH_SHORT).show();
-                })
-                .setNegativeButton("Tutup", (dialog, id) -> dialog.cancel());
-        // Create the AlertDialog object and return it
-        builder.create();
-        builder.show();
     }
 
     private void hapusAktivitas(String key) {
@@ -388,12 +427,5 @@ public class HomePasienFragment extends Fragment implements AktivitasAdapter.IAk
         });
     }
 
-    public static class Holder extends RecyclerView.ViewHolder {
-        ItemDetailAktivitasBinding detailAktivitasBinding;
 
-        public Holder(ItemDetailAktivitasBinding detailAktivitasBinding) {
-            super(detailAktivitasBinding.getRoot());
-            this.detailAktivitasBinding = detailAktivitasBinding;
-        }
-    }
 }

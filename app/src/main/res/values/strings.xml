@@ -5,4 +5,16 @@
     <string name="pesan">Jangan Lupa\nMinum Obat</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string-array name="pendidikan">
+        <item>Tidak sekolah</item>
+        <item>SD/MI</item>
+        <item>SMP/MTS</item>
+        <item>SMA/MA/SMK</item>
+        <item>D3</item>
+        <item>D4</item>
+        <item>S1</item>
+        <item>S2</item>
+        <item>S3</item>
+    </string-array>
 </resources>

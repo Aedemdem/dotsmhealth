@@ -81,11 +81,21 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="0.6"
                         android:gravity="end"
-                        android:text="PendampinFg"
+                        android:text="Pendamping"
                         android:textColor="@color/purple_700" />
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="12dp"
+                android:text="Profil"
+                android:drawableEnd="@drawable/round_edit_24"
+                android:textStyle="bold"
+                android:textColor="@color/purple_700" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -183,6 +193,53 @@
                 android:textColor="@color/purple_700"
                 android:textStyle="bold" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp"
+                android:text="Pendidikan"
+                android:textColor="@color/purple_700" />
+
+            <TextView
+                android:id="@+id/tvPendidikan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="-"
+                android:textColor="@color/purple_700"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp"
+                android:text="Pekerjaan"
+                android:textColor="@color/purple_700" />
+
+            <TextView
+                android:id="@+id/tvPekerjaan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="-"
+                android:textColor="@color/purple_700"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="4dp"
+                android:text="Mulai Pengobatan"
+                android:textColor="@color/purple_700" />
+
+            <TextView
+                android:id="@+id/tvMulaiPengobatan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="-"
+                android:textColor="@color/purple_700"
+                android:textStyle="bold" />
 
             <Button
                 android:id="@+id/btn_google_logout"
@@ -190,9 +247,18 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginTop="56dp"
-                android:layout_marginBottom="56dp"
                 android:text="Logout" />
 
+            <TextView
+                android:id="@+id/tv_versi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginTop="4dp"
+                android:gravity="center"
+                android:layout_marginBottom="56dp"
+                android:text="MUCISDEV 2021"
+                android:textColor="@color/purple_700" />
 
         </LinearLayout>
 

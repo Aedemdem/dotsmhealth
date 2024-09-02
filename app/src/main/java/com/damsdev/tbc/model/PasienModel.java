@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PasienModel implements Parcelable {
-//    private Map<String, String> createdAt;
+    //    private Map<String, String> createdAt;
     private String idPasien;
     private String nama;
     private String kelamin;
@@ -18,10 +18,25 @@ public class PasienModel implements Parcelable {
     private String noHp;
     private String email;
     private String idNakes;
+    private String pendidikan;
+    private String pekerjaan;
+    private String mulaiPengobatan;
 
-    public PasienModel(){}
+    public PasienModel() {
+    }
 
-    public PasienModel(String idPasien, String nama,String keelamin, String tglLahir, String alamat, String noHp, String email, String idNakes) {
+    public PasienModel(
+            String idPasien,
+            String nama,
+            String keelamin,
+            String tglLahir,
+            String alamat,
+            String noHp,
+            String email,
+            String idNakes,
+            String pendidikan,
+            String pekerjaan,
+            String mulaiPengobatan) {
 //        this.createdAt = createdAt;
         this.idPasien = idPasien;
         this.nama = nama;
@@ -31,6 +46,9 @@ public class PasienModel implements Parcelable {
         this.noHp = noHp;
         this.email = email;
         this.idNakes = idNakes;
+        this.pendidikan = pendidikan;
+        this.pekerjaan = pekerjaan;
+        this.mulaiPengobatan = mulaiPengobatan;
     }
 
     protected PasienModel(Parcel in) {
@@ -45,6 +63,9 @@ public class PasienModel implements Parcelable {
         noHp = in.readString();
         email = in.readString();
         idNakes = in.readString();
+        pendidikan = in.readString();
+        pekerjaan = in.readString();
+        mulaiPengobatan = in.readString();
     }
 
     public static final Creator<PasienModel> CREATOR = new Creator<PasienModel>() {
@@ -75,6 +96,9 @@ public class PasienModel implements Parcelable {
         parcel.writeString(noHp);
         parcel.writeString(email);
         parcel.writeString(idNakes);
+        parcel.writeString(pendidikan);
+        parcel.writeString(pekerjaan);
+        parcel.writeString(mulaiPengobatan);
     }
 
 //    public Map<String, String> getCreatedAt() {
@@ -148,5 +172,29 @@ public class PasienModel implements Parcelable {
 
     public void setIdNakes(String idNakes) {
         this.idNakes = idNakes;
+    }
+
+    public String getPendidikan() {
+        return pendidikan;
+    }
+
+    public void setPendidikan(String pendidikan) {
+        this.pendidikan = pendidikan;
+    }
+
+    public String getPekerjaan() {
+        return pekerjaan;
+    }
+
+    public void setPekerjaan(String pekerjaan) {
+        this.pekerjaan = pekerjaan;
+    }
+
+    public String getMulaiPengobatan() {
+        return mulaiPengobatan;
+    }
+
+    public void setMulaiPengobatan(String mulaiPengobatan) {
+        this.mulaiPengobatan = mulaiPengobatan;
     }
 }

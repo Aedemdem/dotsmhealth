@@ -1,6 +1,7 @@
 package com.damsdev.tbc.nakes;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -8,18 +9,21 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.damsdev.tbc.AktivitasAdapter;
 import com.damsdev.tbc.R;
 import com.damsdev.tbc.TambahProgramActivity;
 import com.damsdev.tbc.databinding.ActivityAktivitasPasienBinding;
@@ -29,8 +33,10 @@ import com.damsdev.tbc.databinding.ItemDetailAktivitasBinding;
 import com.damsdev.tbc.model.AktivitasDetailModel;
 import com.damsdev.tbc.model.AktivitasModel;
 import com.damsdev.tbc.util.DbReference;
+import com.damsdev.tbc.util.SharedPrefManager;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseError;
@@ -53,12 +59,12 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
     private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference dbRefPasien, dbAktivitas,dbDetailAktivitas;
-    private List<AktivitasModel> aktivitasModels;
-    private List<String> keyAktivitasList;
-    private AktivitasAdapter aktivitasAdapter;
+    private DatabaseReference dbAktivitas,dbDetailAktivitas;
+
     Dialog dialogProgram;
     DialogListProgramAktivitas2Binding dialogBinding;
+
+    boolean isLongPress = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +90,7 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
                 .dontAnimate()
                 .into(binding.ivPasien);
 
-        binding.cardProgram.setOnClickListener(view -> {
+        binding.fab.setOnClickListener(view -> {
             showProgramDialog();
         });
 
@@ -103,9 +109,6 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
         binding.rvDetailAktivitas.setLayoutManager(mLayoutManager2);
         binding.rvDetailAktivitas.setItemAnimator(new DefaultItemAnimator());
 
-        aktivitasModels = new ArrayList<>();
-        keyAktivitasList = new ArrayList<>();
-
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
@@ -113,7 +116,9 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
         dbAktivitas = firebaseDatabase.getReference(DbReference.AKTIVITAS);
         dbDetailAktivitas = firebaseDatabase.getReference(DbReference.DETAIL_AKTIVITAS);
 
-//        getAktivitas(dbAktivitas.orderByChild("idPasien").equalTo(idPasien));
+        // TODO: 08/11/23 Tombol tambah hide ketika tidak ada program dipilih, hapus program & detail_program untuk nakes
+
+        // getAktivitas(dbAktivitas.orderByChild("idPasien").equalTo(idPasien));
     }
 
     @Override
@@ -132,17 +137,51 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
     private void getAktivitas() {
         FirebaseRecyclerOptions<AktivitasModel> options = new FirebaseRecyclerOptions.Builder<AktivitasModel>()
                 .setQuery(dbAktivitas.orderByChild("idPasien").equalTo(idPasien), AktivitasModel.class).build(); /** Firebase database eke thiyena data Contact class ekata gannawa*/
-
         FirebaseRecyclerAdapter<AktivitasModel, AktivitasPasienActivity.HolderAktivitas> adapters = new FirebaseRecyclerAdapter<AktivitasModel, AktivitasPasienActivity.HolderAktivitas>(options) {
             @SuppressLint("SetTextI18n")
             @Override
             protected void onBindViewHolder(@NonNull AktivitasPasienActivity.HolderAktivitas holder, int position, @NonNull AktivitasModel model) {
                 holder.aktivitasBinding.tvTgl.setText(model.getTglMulai()+" s/d "+model.getTglSelesai());
                 binding.tvProgram.setText(model.getTglMulai() + " s/d " + model.getTglSelesai());
+                binding.tvProgram.setText(model.getTglMulai() + " s/d " + model.getTglSelesai());
                 holder.itemView.setOnClickListener(view -> {
                     getDetailAktivitas(getRef(position).getKey());
                     setDashBoard(model.getTglMulai(), model.getTglSelesai());
                     dialogProgram.dismiss();
+                });
+                holder.aktivitasBinding.tvPilih.setVisibility(View.GONE);
+                holder.aktivitasBinding.ivOption.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        PopupMenu popup = new PopupMenu(AktivitasPasienActivity.this, holder.aktivitasBinding.ivOption);
+                        //inflating menu from xml resource
+                        popup.inflate(R.menu.option_menu);
+                        //adding click listener
+                        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                            @Override
+                            public boolean onMenuItemClick(MenuItem item) {
+                                switch (item.getItemId()) {
+                                    case R.id.option:
+                                        //handle menu3 click
+                                        Toast.makeText(AktivitasPasienActivity.this, "Option 2", Toast.LENGTH_SHORT).show();
+                                        AlertDialog.Builder builder = new AlertDialog.Builder(AktivitasPasienActivity.this);
+                                        builder.setMessage("Aktivitas ")
+                                                .setPositiveButton("Hapus aktivitas", (dialog, id) -> {
+                                                    hapusAktivitas(getRef(position).getKey());
+                                                    dialog.cancel();
+                                                    Toast.makeText(AktivitasPasienActivity.this, "Menghapus...", Toast.LENGTH_SHORT).show();
+                                                })
+                                                .setNegativeButton("Tutup", (dialog, id) -> dialog.cancel());
+                                        builder.create();
+                                        builder.show();
+                                        break;
+                                }
+                                return false;
+                            }
+                        });
+                        //displaying the popup
+                        popup.show();
+                    }
                 });
             }
 
@@ -156,7 +195,10 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
         dialogBinding.rvProgramAktivitas.setAdapter(adapters);
         adapters.startListening();
         showProgramDialog();
+    }
 
+    private void hapusAktivitas(String key) {
+        dbAktivitas.child(key).removeValue().addOnSuccessListener(unused -> Toast.makeText(AktivitasPasienActivity.this, "Dihapus", Toast.LENGTH_SHORT).show());
     }
 
     public static class HolderAktivitas extends RecyclerView.ViewHolder {
@@ -167,7 +209,6 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
             this.aktivitasBinding = aktivitasBinding;
         }
     }
-
     private void showProgramDialog() {
         dialogBinding.chipTambahAktivitas.setOnClickListener(view -> {
             Intent intent = new Intent(AktivitasPasienActivity.this, TambahProgramActivity.class);
@@ -179,7 +220,6 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
         dialogProgram.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         dialogProgram.show();
     }
-
     private void setDashBoard(String tglMulai, String tglSelesai) {
         binding.tvProgram.setText(tglMulai+" s/d "+tglSelesai);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
@@ -209,7 +249,6 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
 //        String strKepatuhan = String.valueOf((diff2/diff) * 100);
 //        binding.tvKepatuhan.setText(strKepatuhan+"%");
     }
-
     private void getDetailAktivitas(String key) {
         Log.d(LOG,"KEY = "+key);
         FirebaseRecyclerOptions<AktivitasDetailModel> options = new FirebaseRecyclerOptions.Builder<AktivitasDetailModel>()
@@ -242,10 +281,8 @@ public class AktivitasPasienActivity extends AppCompatActivity  {
         Log.d(LOG,"Listen");
 
     }
-
     public static class HolderDetailAktivitas extends RecyclerView.ViewHolder {
         ItemDetailAktivitasBinding detailAktivitasBinding;
-
         public HolderDetailAktivitas(ItemDetailAktivitasBinding detailAktivitasBinding) {
             super(detailAktivitasBinding.getRoot());
             this.detailAktivitasBinding = detailAktivitasBinding;

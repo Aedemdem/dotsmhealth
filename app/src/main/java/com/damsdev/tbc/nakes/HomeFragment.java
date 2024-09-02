@@ -2,6 +2,7 @@ package com.damsdev.tbc.nakes;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,15 +18,19 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.damsdev.tbc.R;
 import com.damsdev.tbc.databinding.FragmentHomeBinding;
 import com.damsdev.tbc.databinding.ItemPasienBinding;
+import com.damsdev.tbc.model.NakesModel;
 import com.damsdev.tbc.model.PasienModel;
 import com.damsdev.tbc.util.DbReference;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class HomeFragment extends Fragment {
     FragmentHomeBinding binding;
@@ -33,7 +38,7 @@ public class HomeFragment extends Fragment {
     private FirebaseAuth firebaseAuth;
     private FirebaseUser firebaseUser;
     private FirebaseDatabase firebaseDatabase;
-    private DatabaseReference dbRefPasien;
+    private DatabaseReference dbRefPasien, dbRefNakes;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,8 +51,8 @@ public class HomeFragment extends Fragment {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        binding.tvNama.setText(user != null ? user.getDisplayName() : "-");
-        binding.tvNomor.setText(user != null ? user.getEmail() : "-");
+//        binding.tvNama.setText(user != null ? user.getDisplayName() : "-");
+//        binding.tvNomor.setText(user != null ? user.getEmail() : "-");
 
         Glide.with(requireActivity())
                 .asBitmap()
@@ -66,7 +71,7 @@ public class HomeFragment extends Fragment {
         firebaseUser = firebaseAuth.getCurrentUser();
 
         firebaseDatabase = FirebaseDatabase.getInstance();
-        dbRefPasien = firebaseDatabase.getReference(DbReference.REQUEST);
+        dbRefNakes = firebaseDatabase.getReference(DbReference.NAKES);
         dbRefPasien = firebaseDatabase.getReference(DbReference.PASIEN);
 
         return binding.getRoot();
@@ -77,6 +82,7 @@ public class HomeFragment extends Fragment {
     public void onStart() {
         super.onStart();
         getPasien();
+        getNakes(dbRefNakes.orderByChild("idNakes").equalTo(firebaseUser.getUid()));
     }
 
     private void getPasien() {
@@ -122,6 +128,28 @@ public class HomeFragment extends Fragment {
         adapters.startListening();
     }
 
+    private void getNakes(Query query) {
+        ValueEventListener valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.getValue() == null) {
+                    Log.d(LOG, "Queryyy value: " + snapshot.getValue());
+                } else {
+                    for (DataSnapshot data : snapshot.getChildren()) {
+                        NakesModel model = data.getValue(NakesModel.class);
+                        binding.tvNama.setText(model != null ? model.getNama() : "-");
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.d(LOG, "Query: " + error.getDetails());
+            }
+        };
+
+        query.addValueEventListener(valueEventListener);
+    }
     public static class Holder extends RecyclerView.ViewHolder {
         ItemPasienBinding itemPasienBinding;
 

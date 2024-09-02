@@ -1,12 +1,11 @@
 package com.damsdev.tbc.nakes;
 
 import android.app.AlarmManager;
-import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,11 +17,10 @@ import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.damsdev.tbc.EditProfilActivity;
 import com.damsdev.tbc.LoginActivity;
 import com.damsdev.tbc.R;
-import com.damsdev.tbc.RequestActivity;
-import com.damsdev.tbc.databinding.DialogNakesBinding;
-import com.damsdev.tbc.databinding.FragmentProfilPasienBinding;
+import com.damsdev.tbc.databinding.FragmentProfilNakesBinding;
 import com.damsdev.tbc.model.NakesModel;
 import com.damsdev.tbc.util.AlarmReceiver;
 import com.damsdev.tbc.util.DbReference;
@@ -39,14 +37,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Objects;
-
 public class ProfilNakesFragment extends Fragment {
     Intent alarmIntent;
     PendingIntent pendingIntent;
     Context context;
     String LOG = "LOG_PROFIL_NAKES_FRAGMENT";
-    private FragmentProfilPasienBinding binding;
+    NakesModel model;
+    String key = "";
+    private FragmentProfilNakesBinding binding;
     private SharedPrefManager sharedPrefManager;
     private AlarmManager alarmManager;
     private FirebaseAuth firebaseAuth;
@@ -70,7 +68,7 @@ public class ProfilNakesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        binding = FragmentProfilPasienBinding.inflate(inflater, container, false);
+        binding = FragmentProfilNakesBinding.inflate(inflater, container, false);
         binding.btnGoogleLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -92,6 +90,14 @@ public class ProfilNakesFragment extends Fragment {
 //                .apply(requestOptions)
                 .into(binding.ivProfil);
 
+        binding.tvEdit.setOnClickListener(view -> {
+            Intent intent = new Intent(requireActivity(), EditProfilActivity.class);
+            intent.putExtra("sebagai", "nakes");
+            intent.putExtra("key", key);
+            intent.putExtra("model", model);
+            startActivity(intent);
+        });
+
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseUser = firebaseAuth.getCurrentUser();
 
@@ -99,6 +105,8 @@ public class ProfilNakesFragment extends Fragment {
 
         dbRefNakes = firebaseDatabase.getReference(DbReference.NAKES);
         getNakes(dbRefNakes.orderByChild("idNakes").equalTo(firebaseUser.getUid()));
+
+        getVersionName();
         return binding.getRoot();
     }
 
@@ -106,16 +114,26 @@ public class ProfilNakesFragment extends Fragment {
         ValueEventListener valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+
                 if (snapshot.getValue() == null) {
                     Log.d(LOG, "Queryyy: " + snapshot.getValue());
                 } else {
                     Log.d(LOG, "Queryyy: " + snapshot.getValue());
 
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
-                        NakesModel model = dataSnapshot.getValue(NakesModel.class);
+                        Log.d(LOG, "Key : " + dataSnapshot.getKey());
+                        key = dataSnapshot.getKey();
+
+                        model = dataSnapshot.getValue(NakesModel.class);
                         binding.tvNama.setText(model != null ? model.getNama() : "-");
                         binding.tvTglLahir.setText(model != null ? model.getTglLahir() : "-");
                         binding.tvAlamat.setText(model != null ? model.getAlamat() : "-");
+                        if (model.getKelamin().equals("P")) {
+                            binding.tvJnsKelamin.setText("Perempuan");
+                        } else if (model.getKelamin().equals("L")) {
+                            binding.tvJnsKelamin.setText("Laki-laki");
+                        }
+
                         binding.tvHp.setText(model != null ? model.getNoHp() : "-");
                         binding.tvEmail.setText(model != null ? model.getEmail() : "-");
                     }
@@ -137,15 +155,15 @@ public class ProfilNakesFragment extends Fragment {
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                     public void onComplete(@NonNull Task<Void> task) {
                         // ...
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_NAKES,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_PASIEN,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_IS_ALARM_AKTIF,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_HOUR,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_MINUTS,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI,"");
-                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI,"");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_NAKES, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_PASIEN, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_AKTIVITAS, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TERAKHIR_POST, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_IS_ALARM_AKTIF, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_HOUR, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ALARM_MINUTS, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_MULAI, "");
+                        sharedPrefManager.saveString(SharedPrefManager.SP_TGL_SELESAI, "");
                         sharedPrefManager.clearAll();
                         cancelAlarm();
 
@@ -161,6 +179,20 @@ public class ProfilNakesFragment extends Fragment {
         if (alarmManager != null) {
             alarmManager.cancel(pendingIntent);
         }
+    }
+
+    private void getVersionName() {
+        PackageManager pm = requireActivity().getApplicationContext().getPackageManager();
+        String pkgName = requireActivity().getApplicationContext().getPackageName();
+        PackageInfo pkgInfo = null;
+        try {
+            pkgInfo = pm.getPackageInfo(pkgName, 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        assert pkgInfo != null;
+        String ver = pkgInfo.versionName;
+        binding.tvVersi.setText("Versi " + ver);
     }
 
 }

@@ -1,17 +1,17 @@
 package com.damsdev.tbc;
 
-import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,14 +19,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.damsdev.tbc.databinding.ActivityReequestBinding;
 import com.damsdev.tbc.databinding.DialogRequestBinding;
+import com.damsdev.tbc.databinding.ItemNakesBinding;
 import com.damsdev.tbc.model.NakesModel;
 import com.damsdev.tbc.model.PasienModel;
 import com.damsdev.tbc.model.RequestModel;
 import com.damsdev.tbc.util.DbReference;
+import com.damsdev.tbc.util.SharedPrefManager;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class RequestActivity extends AppCompatActivity implements NakesAdapter.INakesClick {
+public class RequestActivity extends AppCompatActivity{
     ActivityReequestBinding binding;
     String LOG = "LOG_REQUEST_ACTIVITY";
     String nmPasien, alamatPasien;
@@ -46,9 +49,9 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
     private FirebaseUser firebaseUser;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference dbRefRequest, dbRefNakes, dbRefPasien;
-    private List<NakesModel> models;
-    //    private ArrayList<String> keyList;
-    private NakesAdapter adapter;
+    String nmNakes;
+
+    SharedPrefManager sharedPrefManager;
 
     // move to on success
     @Override
@@ -56,6 +59,7 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
         super.onCreate(savedInstanceState);
         binding = ActivityReequestBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        sharedPrefManager = new SharedPrefManager(this);
 
         if (getIntent().getStringExtra("menu") != null) {
             if (getIntent().getStringExtra("menu").equals("registrasi")) {
@@ -69,12 +73,9 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
 
         Objects.requireNonNull(getSupportActionBar()).setTitle("Permintaan pendampingan");
 
-        models = new ArrayList<>();
-        adapter = new NakesAdapter(models, this, this);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(this);
         binding.rvNakes.setLayoutManager(mLayoutManager);
         binding.rvNakes.setItemAnimator(new DefaultItemAnimator());
-        binding.rvNakes.setAdapter(adapter);
 
         binding.constraintMenungguKonfirmasi.setVisibility(View.GONE);
 
@@ -88,6 +89,28 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
 
         getDetailPasien(dbRefPasien.orderByChild("email").equalTo(firebaseUser.getEmail()));
 
+    }
+
+    private void cekStatusPendampingan(Query query) {
+        ValueEventListener valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.getValue() == null) {
+                    Log.d(LOG, "cekStatusPendampingan: == null" + snapshot.getValue());
+                } else {
+                    Log.d(LOG, "cekStatusPendampingan: != null" + snapshot.getValue());
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+//                Toast.makeText(RequestActivity.this, "Gagal " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.d(LOG, "Query: " + error.getDetails());
+            }
+        };
+
+        query.addValueEventListener(valueEventListener);
     }
 
     @Override
@@ -115,19 +138,24 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.getValue() == null) {
+                    Log.d(LOG, "getDetailPasien: == null " + snapshot.getValue());
 //                    Toast.makeText(RequestActivity.this, "Data pasien ditemukan", Toast.LENGTH_SHORT).show();
                 } else {
-                    Log.d(LOG, "Pasien value: " + snapshot.getValue());
+                    Log.d(LOG, "getDetailPasien: != null " + snapshot.getValue());
+//                    Log.d(LOG, "Pasien value: " + snapshot.getValue());
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                         PasienModel model = dataSnapshot.getValue(PasienModel.class);
                         nmPasien = model != null ? model.getNama() : "-";
                         alamatPasien = model != null ? model.getAlamat() : "-";
                         Log.d(LOG, "Pasien value: nmPasien" + nmPasien);
                         Log.d(LOG, "Pasien value: alamatPasien" + alamatPasien);
+                        sharedPrefManager.saveString(SharedPrefManager.SP_ID_NAKES,model != null ? model.getIdNakes():"");
                     }
 
 //                    Log.d(LOG, "Pasien value: nmPasien" + snapshot.child("pasien").child("nama").getValue());
                     getRequest(dbRefRequest.orderByChild("idPasien").equalTo(firebaseUser.getUid()));
+                    // TODO: 08/11/23 cek status pendampingan
+                    cekStatusPendampingan(dbRefNakes.orderByChild("idNakes").equalTo(sharedPrefManager.getSpIdNakes() != null ? sharedPrefManager.getSpIdNakes() : ""));
                 }
             }
 
@@ -145,13 +173,14 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.getValue() == null) {
 //                    Toast.makeText(RequestActivity.this, "Data tidak ditemukan", Toast.LENGTH_SHORT).show();
-                    Log.d(LOG, "Queryyy value: " + snapshot.getValue());
+                    Log.d(LOG, "getRequest: == null " + snapshot.getValue());
                     getNakes(dbRefNakes);
                     binding.rvNakes.setVisibility(View.VISIBLE);
                     binding.constraintMenungguKonfirmasi.setVisibility(View.GONE);
+
                 } else {
 //                    Toast.makeText(RequestActivity.this, "Ditemukan", Toast.LENGTH_SHORT).show();
-                    Log.d(LOG, "Queryyy: " + snapshot.getValue());
+                    Log.d(LOG, "getRequest: != null " + snapshot.getValue());
 
 //                    RequestModel requestModel = snapshot.child("request").getValue(RequestModel.class);
 //                    List<RequestModel> rm = new ArrayList<>();
@@ -160,8 +189,7 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
                     for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                         RequestModel model = dataSnapshot.getValue(RequestModel.class);
                         if (model != null) {
-                            binding.tvNama.setText(model.getNmPasien());
-                            binding.tvAlamat.setText(model.getAlamatPasien());
+                            binding.tvNama.setText(model.getNmNakes());
                             binding.btnBatalkan.setOnClickListener(view -> {
                                 batalkanRequest(dataSnapshot.getKey());
                             });
@@ -197,59 +225,50 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
     }
 
     private void getNakes(DatabaseReference dbref) {
-        models.clear();
-        // List nakes
-        dbref.addChildEventListener(new ChildEventListener() {
+        Log.d(LOG, "getNakes");
+        FirebaseRecyclerOptions<NakesModel> options = new FirebaseRecyclerOptions.Builder<NakesModel>()
+                .setQuery(dbref.orderByChild("nama"), NakesModel.class).build();
+
+        FirebaseRecyclerAdapter<NakesModel, RequestActivity.Holder> adapters = new FirebaseRecyclerAdapter<NakesModel, RequestActivity.Holder>(options) {
             @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Log.d(LOG, "Child Added, " + snapshot.getValue());
-                NakesModel nakesModel = snapshot.getValue(NakesModel.class);
-                models.add(nakesModel);
-                adapter.notifyDataSetChanged();
+            protected void onBindViewHolder(@NonNull RequestActivity.Holder holder, int position, @NonNull NakesModel model) {
+                holder.itemBinding.tvNama.setText(model.getNama());
+                holder.itemBinding.tvAlamat.setText(model.getAlamat());
+
+                holder.itemBinding.btnTambahkan.setOnClickListener(view -> {
+                    showReqDialog(model.getIdNakes());
+                    nmNakes = model.getNama();
+                });
+            }
+
+            @NonNull
+            @Override
+            public RequestActivity.Holder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                return new RequestActivity.Holder(ItemNakesBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false));
             }
 
             @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                adapter.notifyDataSetChanged();
+            public void onError(@NonNull DatabaseError error) {
+                super.onError(error);
             }
+        };
 
-            @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            @SuppressLint("NotifyDataSetChanged")
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(RequestActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        binding.rvNakes.setAdapter(adapters);
+        adapters.startListening();
     }
 
-    @Override
-    public void onItemNakesClick(int position) {
-        showReqDialog(position);
-    }
 
-    private void showReqDialog(int position) {
+    private void showReqDialog(String idNakes) {
         Dialog dialog = new Dialog(this);
         DialogRequestBinding dialogRequestBinding = DialogRequestBinding.inflate(getLayoutInflater());
         dialog.setContentView(dialogRequestBinding.getRoot());
 
-        NakesModel nakesModel = models.get(position);
+//        NakesModel nakesModel = models.get(position);
 
         dialogRequestBinding.btnRequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendRequest(firebaseUser.getUid(), nakesModel.getIdNakes());
+                sendRequest(firebaseUser.getUid(), idNakes);
 //                Toast.makeText(RequestActivity.this, "Oke - " + nakesModel.getNama() + "Key - ", Toast.LENGTH_SHORT).show();
                 dialog.cancel();
             }
@@ -261,12 +280,21 @@ public class RequestActivity extends AppCompatActivity implements NakesAdapter.I
     }
 
     private void sendRequest(String idPasien, String idNakes) {
-        RequestModel requestModel = new RequestModel(idPasien, idNakes, nmPasien, alamatPasien);
+        RequestModel requestModel = new RequestModel(idPasien, idNakes, nmPasien, alamatPasien, nmNakes);
         dbRefRequest.push().setValue(requestModel).addOnSuccessListener(this, new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void unused) {
                 Toast.makeText(getApplicationContext(), "Permintaan terkirim", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public static class Holder extends RecyclerView.ViewHolder {
+        ItemNakesBinding itemBinding;
+
+        public Holder(ItemNakesBinding itemBinding) {
+            super(itemBinding.getRoot());
+            this.itemBinding = itemBinding;
+        }
     }
 }

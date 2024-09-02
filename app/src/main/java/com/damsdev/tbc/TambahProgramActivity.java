@@ -43,6 +43,8 @@ public class TambahProgramActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityTambahProgramBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        Objects.requireNonNull(getSupportActionBar()).setDisplayShowHomeEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setTitle("Tambahkan Program");
 
         idPasien = getIntent().getStringExtra("idPasien");
 
@@ -68,6 +70,17 @@ public class TambahProgramActivity extends AppCompatActivity {
                 tambahAktivitas();
             }
         });
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     private void showDatePicker(String s) {

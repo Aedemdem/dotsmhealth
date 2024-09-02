@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_primary_button"
-            android:text="Tambahkan"
+            android:text="Kririm permintaan pendampingan"
             app:elevation="6dp" />
     </LinearLayout>
 </RelativeLayout>

@@ -21,15 +21,17 @@ public class RequestModel implements Parcelable {
     private String idNakes;
     private String nmPasien;
     private String alamatPasien;
+    private String nmNakes;
 
     public RequestModel() {
     }
 
-    public RequestModel(String idPasien, String idNakes, String nmPasien, String alamatPasien) {
+    public RequestModel(String idPasien, String idNakes, String nmPasien, String alamatPasien, String nmNakes) {
         this.idPasien = idPasien;
         this.idNakes = idNakes;
         this.nmPasien = nmPasien;
         this.alamatPasien = alamatPasien;
+        this.nmNakes = nmNakes;
     }
 
     protected RequestModel(Parcel in) {
@@ -37,6 +39,7 @@ public class RequestModel implements Parcelable {
         idNakes = in.readString();
         nmPasien = in.readString();
         alamatPasien = in.readString();
+        nmNakes = in.readString();
     }
 
     @Override
@@ -50,6 +53,7 @@ public class RequestModel implements Parcelable {
         parcel.writeString(idNakes);
         parcel.writeString(nmPasien);
         parcel.writeString(alamatPasien);
+        parcel.writeString(nmNakes);
     }
 
     public String getIdPasien() {
@@ -82,5 +86,13 @@ public class RequestModel implements Parcelable {
 
     public void setAlamatPasien(String alamatPasien) {
         this.alamatPasien = alamatPasien;
+    }
+
+    public String getNmNakes() {
+        return nmNakes;
+    }
+
+    public void setNmNakes(String nmNakes) {
+        this.nmNakes = nmNakes;
     }
 }

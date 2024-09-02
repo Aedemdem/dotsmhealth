@@ -1,7 +1,10 @@
 package com.damsdev.tbc;
 
+import static android.icu.text.MessagePattern.Part.Type.ARG_NAME;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -53,6 +56,13 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
+    private static final String ARG_NAME = "username";
+    public static void startActivity(Context context, String username) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra(ARG_NAME, username);
+        context.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,3 +99,5 @@ public class MainActivity extends AppCompatActivity {
 
     }
 }
+
+// TODO: 11/10/23 Pendamping required

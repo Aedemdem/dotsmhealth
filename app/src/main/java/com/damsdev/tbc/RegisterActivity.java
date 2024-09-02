@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.RadioButton;
 import android.widget.Toast;
 
@@ -27,10 +28,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
@@ -42,9 +43,9 @@ public class RegisterActivity extends AppCompatActivity {
     DatabaseReference dbRefUser, dbRefPasien, dbRefNakes;
     String dipilih = "";
     String kelamin = "";
-    private ActivityRegisterBinding binding;
+    ActivityRegisterBinding binding;
     private FirebaseDatabase firebaseDatabase;
-    private String nama, tglLahir, alamat, noHp, email = "";
+    private String nama, tglLahir, alamat, noHp, email, pendidikan, pekerjaan, mulaiPengobatan = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,19 +65,34 @@ public class RegisterActivity extends AppCompatActivity {
         binding.btnSimpan.setVisibility(View.GONE);
         binding.progressBar.setVisibility(View.GONE);
 
+        binding.linear1.setVisibility(View.GONE);
+        binding.linear2.setVisibility(View.GONE);
+
         binding.etTglLahir.setOnClickListener(view -> {
             showDatePicker();
         });
+
+        binding.etMulaiPengobatan.setOnClickListener(view -> {
+            showDatePickerPengobatan();
+        });
+
+        String[] arrayListPendidikan = getResources().getStringArray(R.array.pendidikan);
+        ArrayAdapter pendidikan = new ArrayAdapter(this, R.layout.dropdown_pendidikan, arrayListPendidikan);
+        binding.etPendidikan.setAdapter(pendidikan);
 
         binding.btnSimpan.setOnClickListener(view -> {
             if (isValid()) {
                 binding.btnSimpan.setVisibility(View.GONE);
                 binding.progressBar.setVisibility(View.VISIBLE);
                 simpan();
+//                Toast.makeText(this, "Valid", Toast.LENGTH_SHORT).show();
             }
-            Intent intent = new Intent(RegisterActivity.this, RequestActivity.class);
-            Log.d(LOG, "Intent to ReequestActivity");
-            startActivity(intent);
+            else {
+//                Toast.makeText(this, "Tidak valid", Toast.LENGTH_SHORT).show();
+            }
+//            Intent intent = new Intent(RegisterActivity.this, RequestActivity.class);
+//            Log.d(LOG, "Intent to ReequestActivity");
+//            startActivity(intent);
         });
 
         getCurrentUser(firebaseUser);
@@ -130,6 +146,42 @@ public class RegisterActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void showDatePickerPengobatan() {
+        Dialog dialog = new Dialog(this);
+        DialogDatePickerBinding dialogDatePickerBinding = DialogDatePickerBinding.inflate(getLayoutInflater());
+        dialog.setContentView(dialogDatePickerBinding.getRoot());
+        dialogDatePickerBinding.datePicker.setMaxDate(System.currentTimeMillis()+24*60*60*1000);
+        dialogDatePickerBinding.btnAtur.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String date = dialogDatePickerBinding.datePicker.getYear() + "/" + (dialogDatePickerBinding.datePicker.getMonth() + 1) + "/" + dialogDatePickerBinding.datePicker.getDayOfMonth();
+                SimpleDateFormat spf = new SimpleDateFormat("yyyy/MM/dd");
+                Date newDate = null;
+                try {
+                    newDate = spf.parse(date);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                spf = new SimpleDateFormat("dd MMMM yyyy");
+                date = spf.format(newDate != null ? newDate : "");
+
+                binding.etMulaiPengobatan.setText(date);
+
+                dialog.cancel();
+            }
+        });
+        dialogDatePickerBinding.btnBatal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.cancel();
+            }
+        });
+        Objects.requireNonNull(dialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.show();
+    }
+
+
     @SuppressLint("NonConstantResourceId")
     public void onRadioButtonKelaminClicked(View view) {
         isRadioKelaminChecked = ((RadioButton) view).isChecked();
@@ -154,11 +206,15 @@ public class RegisterActivity extends AppCompatActivity {
             case R.id.rbNakes:
                 if (isRadioSebagaiChecked) {
                     dipilih = "nakes";
+                    binding.linear1.setVisibility(View.VISIBLE);
+                    binding.linear2.setVisibility(View.GONE);
                 }
                 break;
             case R.id.rbPasien:
                 if (isRadioSebagaiChecked) {
                     dipilih = "pasien";
+                    binding.linear1.setVisibility(View.VISIBLE);
+                    binding.linear2.setVisibility(View.VISIBLE);
                 }
                 break;
         }
@@ -171,8 +227,16 @@ public class RegisterActivity extends AppCompatActivity {
             tglLahir = Objects.requireNonNull(binding.etTglLahir.getText()).toString();
             alamat = Objects.requireNonNull(binding.etAlamat.getText()).toString();
             noHp = Objects.requireNonNull(binding.etNoHp.getText()).toString();
+            pendidikan = Objects.requireNonNull(binding.etPendidikan.getText()).toString();
+            pekerjaan = Objects.requireNonNull(binding.etPekerjaan.getText()).toString();
+            mulaiPengobatan = Objects.requireNonNull(binding.etMulaiPengobatan.getText()).toString();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if (!isRadioSebagaiChecked) {
+            Toast.makeText(this, "Pilih salah satu, sebagai pasien atau nakes", Toast.LENGTH_SHORT).show();
+            return false;
         }
 
         if (nama.isEmpty()) {
@@ -197,13 +261,28 @@ public class RegisterActivity extends AppCompatActivity {
         }
         binding.etNoHp.setError(null);
 
-        if (!isRadioKelaminChecked) {
-            Toast.makeText(this, "Pilih jenis kelamin", Toast.LENGTH_SHORT).show();
-            return false;
+        if (dipilih.equals("pasien")) {
+            if (pendidikan.isEmpty()) {
+                binding.etPendidikan.setError("Wajib diisi");
+                return false;
+            }
+            binding.etPendidikan.setError(null);
+
+            if (pekerjaan.isEmpty()) {
+                binding.etPekerjaan.setError("Wajib diisi");
+                return false;
+            }
+            binding.etPekerjaan.setError(null);
+
+            if (mulaiPengobatan.isEmpty()) {
+                binding.etMulaiPengobatan.setError("Wajib diisi");
+                return false;
+            }
+            binding.etMulaiPengobatan.setError(null);
         }
 
-        if (!isRadioSebagaiChecked) {
-            Toast.makeText(this, "Pilih salah satu, sebagai pasien atau nakes", Toast.LENGTH_SHORT).show();
+        if (!isRadioKelaminChecked) {
+            Toast.makeText(this, "Pilih jenis kelamin", Toast.LENGTH_SHORT).show();
             return false;
         }
 
@@ -211,23 +290,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void simpan() {
-        // dapatkan data ketika data berubah
-        // TODO: 27/06/23 Dihilangkan gpp kan?
-//        ValueEventListener valueEventListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot snapshot) {
-//                String sn = snapshot.getKey();
-//                Log.d("REGISTER", sn);
-//            }
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError error) {
-//                Toast.makeText(RegisterActivity.this, "Gagal " + error.getMessage(), Toast.LENGTH_SHORT).show();
-//                Log.d("REGISTER", error.getDetails());
-//            }
-//        };
-//        databaseReference.addValueEventListener(valueEventListener);
-
-        PasienModel pasienModel = new PasienModel(firebaseUser.getUid(), nama, kelamin, tglLahir, alamat, noHp, email, "");
+        PasienModel pasienModel = new PasienModel(firebaseUser.getUid(), nama, kelamin, tglLahir, alamat, noHp, email, "", pendidikan, pekerjaan, mulaiPengobatan);
         NakesModel nakesModel = new NakesModel(firebaseUser.getUid(), nama, kelamin, tglLahir, alamat, email, noHp);
 
         if (dipilih.equals("pasien")) {
@@ -252,12 +315,9 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(RegisterActivity.this, "Registrasi berhasil", Toast.LENGTH_SHORT).show();
                     binding.btnSimpan.setVisibility(View.VISIBLE);
                     binding.progressBar.setVisibility(View.GONE);
-//                    Toast.makeText(RegisterActivity.this, "Ke mainmenu", Toast.LENGTH_SHORT).show();
-                    // TODO: 30/06/23 Intent ke main menu
                     registrasiNakesUser();
                 }
             });
-
         }
     }
 
@@ -295,6 +355,6 @@ public class RegisterActivity extends AppCompatActivity {
         Log.d(LOG, "Intent to ReequestActivity");
         intentR.putExtra("menu", "registrasi");
         startActivity(intentR);
+        finish();
     }
-
 }
